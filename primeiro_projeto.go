@@ -6,25 +6,35 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
 )
 
 var maxLevels int = -1
 var currentLevels int
+var rootCmd = &cobra.Command{
+	Use:   "tree",
+	Short: "a tree clone",
+	Long:  `shows a tree of files and directories`,
+	Run: func(cmd *cobra.Command, args []string) {
+		dirArgs := []string{"."} //argumentos recebem uma lista de strings
+		if len(args) > 0 {       //se o tamanho dos args for maior que um,
+			dirArgs = args
+		}
+
+		for _, arg := range dirArgs { //passa por todos os args
+			str, err := tree(arg, "")
+			if err != nil {
+				log.Printf("tree %s: %v\n", arg, err)
+			}
+			fmt.Print(str)
+		}
+	},
+}
 
 func main() {
-	args := []string{"."} //argumentos recebem uma lista de strings
-	if len(os.Args) > 1 { //se o tamanho dos args for maior que um,
-		args = os.Args[1:] //vamos usa-los
-	}
-
-	for _, arg := range args { //passa por todos os args
-		str, err := tree(arg, "")
-		if err != nil {
-			log.Printf("tree %s: %v\n", arg, err)
-		}
-		fmt.Print(str)
-	}
-
+	rootCmd.PersistentFlags().IntVar(&maxLevels, "levels", -1, "Max number of levels")
+	rootCmd.Execute()
 }
 
 func tree(root, indent string) (string, error) { //criamos uma recursao para fazer a "arvore" - indent (indentation)
