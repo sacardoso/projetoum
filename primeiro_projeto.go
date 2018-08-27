@@ -20,16 +20,17 @@ func main() {
 			log.Printf("tree %s: %v\n", arg, err)
 		}
 	}
+
 }
 
 func tree(root, indent string) error { //criamos uma recursao para fazer a "arvore" - indent (indentation)
-	fi, err := os.Stat(root) //retorna info
+	fi, err := os.Stat(root) //retorna infor
 	if err != nil {
 		return fmt.Errorf("could not stat %s: %v", root, err)
 	}
 
-	fmt.Println(fi.Name(), fi.Size()) //"printa" o nome e o tamanho
-	if !fi.IsDir() {                  //se nao for um diretorio, nao tem mais nada o que fazer
+	fmt.Println(fi.Name(), "[", ByteCountSI(fi.Size()), "]") //"printa" o nome e o tamanho
+	if !fi.IsDir() {                                         //se nao for um diretorio, nao tem mais nada o que fazer
 		return nil
 	}
 
@@ -62,4 +63,17 @@ func tree(root, indent string) error { //criamos uma recursao para fazer a "arvo
 
 	return nil
 
+}
+
+func ByteCountSI(b int64) string {
+	const unit = 1000
+	if b < unit { //se o numero for menor que 1000, escreve só com B
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "kMGTPE"[exp]) //dependendo do valor da divisao, pega um valor do slice/array
 }
