@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -58,8 +59,8 @@ func TestTree(t *testing.T) {
 	if err != nil {
 		t.Errorf("err == %v\n", err)
 	}
-	expected := `a [ 4.1 kB ]
-├──1 [ 4.1 kB ]
+	expected := `a [ 136 B ]
+├──1 [ 68 B ]
 └──x [ 2 B ]
 `
 	if result != expected {
@@ -75,12 +76,12 @@ func TestTreeFourLevels(t *testing.T) {
 	if err != nil {
 		t.Errorf("err == %v\n", err)
 	}
-	expected := `b [ 4.1 kB ]
-├──1 [ 4.1 kB ]
-│  └──2 [ 4.1 kB ]
-│     └──3 [ 4.1 kB ]
-│        └──4 [ 4.1 kB ]
-└──2 [ 4.1 kB ]
+	expected := `b [ 136 B ]
+├──1 [ 102 B ]
+│  └──2 [ 102 B ]
+│     └──3 [ 102 B ]
+│        └──4 [ 68 B ]
+└──2 [ 68 B ]
 `
 	if result != expected {
 		t.Errorf("'%s' != '%s'", result, expected)
@@ -96,10 +97,10 @@ func TestTreeMaxLevels(t *testing.T) {
 	if err != nil {
 		t.Errorf("err == %v\n", err)
 	}
-	expected := `b [ 4.1 kB ]
-├──1 [ 4.1 kB ]
-│  └──2 [ 4.1 kB ]
-└──2 [ 4.1 kB ]
+	expected := `b [ 136 B ]
+├──1 [ 102 B ]
+│  └──2 [ 102 B ]
+└──2 [ 68 B ]
 `
 	if result != expected {
 		t.Errorf("'%s' != '%s'", result, expected)
@@ -115,8 +116,32 @@ func TestTreeMaxLevelsZero(t *testing.T) {
 	if err != nil {
 		t.Errorf("err == %v\n", err)
 	}
-	expected := `b [ 4.1 kB ]
+	expected := `b [ 136 B ]
 `
+	if result != expected {
+		t.Errorf("'%s' != '%s'", result, expected)
+	}
+}
+
+func TestTreeMoreDirs(t *testing.T) {
+	parent := setup()
+	defer teardown(parent)
+	maxLevels = 2
+
+	fmt.Println(parent)
+
+	result, err := tree(fmt.Sprintf("%s", parent), "")
+	if err != nil {
+		t.Errorf("err == %v\n", err)
+	}
+	expected := fmt.Sprintf(`%s [ 136 B ]
+	├──a [ 136 B ]
+	│  ├──1 [ 136 B ]
+	│  └──x [ 2 B ]
+	└──b [ 136 B ]
+   		├──1 [ 68 B ]
+   		└──2 [ 2 B ]
+	`, strings.TrimPrefix(parent, "/tmp/"))
 	if result != expected {
 		t.Errorf("'%s' != '%s'", result, expected)
 	}
