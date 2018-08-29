@@ -14,7 +14,7 @@ func main() {
 		args = os.Args[1:] //vamos usa-los
 	}
 
-	for _, arg := range args { //pssa por todos os args
+	for _, arg := range args { //passa por todos os args
 		err := tree(arg, "")
 		if err != nil {
 			log.Printf("tree %s: %v\n", arg, err)
