@@ -24,7 +24,7 @@ func main() {
 }
 
 func tree(root, indent string) error { //criamos uma recursao para fazer a "arvore" - indent (indentation)
-	fi, err := os.Stat(root) //retorna infor
+	fi, err := os.Stat(root) //retorna informacoes
 	if err != nil {
 		return fmt.Errorf("could not stat %s: %v", root, err)
 	}
