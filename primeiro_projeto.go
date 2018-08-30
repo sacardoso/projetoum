@@ -6,37 +6,60 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	args := []string{"."} //argumentos recebem uma lista de strings
-	if len(os.Args) > 1 { //se o tamanho dos args for maior que um,
-		args = os.Args[1:] //vamos usa-los
-	}
-
-	for _, arg := range args { //passa por todos os args
-		err := tree(arg, "")
-		if err != nil {
-			log.Printf("tree %s: %v\n", arg, err)
+var maxLevels = -1
+var currentLevels int
+var rootCmd = &cobra.Command{
+	Use:   "tree",
+	Short: "a tree clone",
+	Long:  `shows a tree of files and directories`,
+	Run: func(cmd *cobra.Command, args []string) {
+		dirArgs := []string{"."} //argumentos recebem uma lista de strings
+		if len(args) > 0 {       //se o tamanho dos args for maior que um,
+			dirArgs = args
 		}
-	}
 
+		for _, arg := range dirArgs { //passa por todos os args
+			str, err := tree(arg, "")
+			if err != nil {
+				log.Printf("tree %s: %v\n", arg, err)
+			}
+			fmt.Print(str)
+		}
+	},
 }
 
-func tree(root, indent string) error { //criamos uma recursao para fazer a "arvore" - indent (indentation)
+func main() {
+	rootCmd.PersistentFlags().IntVar(&maxLevels, "levels", -1, "Max number of levels")
+	rootCmd.Execute()
+}
+
+func tree(root, indent string) (string, error) { //criamos uma recursao para fazer a "arvore" - indent (indentation)
 	fi, err := os.Stat(root) //retorna informacoes
 	if err != nil {
-		return fmt.Errorf("could not stat %s: %v", root, err)
+		return "", fmt.Errorf("could not stat %s: %v", root, err)
 	}
 
-	fmt.Println(fi.Name(), "[", ByteCountSI(fi.Size()), "]") //"printa" o nome e o tamanho
-	if !fi.IsDir() {                                         //se nao for um diretorio, nao tem mais nada o que fazer
-		return nil
+	text := fmt.Sprintln(fi.Name(), "[", ByteCountSI(fi.Size()), "]") //"printa" o nome e o tamanho
+	if !fi.IsDir() {                                                  //se nao for um diretorio, nao tem mais nada o que fazer
+		return text, nil
 	}
 
 	fis, err := ioutil.ReadDir(root) // ReadDir reads the directory named by dirname and returns a list of directory entries sorted by filename
 	if err != nil {
-		return fmt.Errorf("could not read dir %s: %v", root, err)
+		return text, fmt.Errorf("could not read dir %s: %v", root, err)
+	}
+
+	if fi.Name() == ".." {
+		currentLevels--
+	} else {
+		currentLevels++
+	}
+	if maxLevels != -1 && currentLevels > maxLevels {
+		return text, nil
 	}
 
 	var names []string //criou isso pq quando era o ultimo, dava erro
@@ -49,19 +72,21 @@ func tree(root, indent string) error { //criamos uma recursao para fazer a "arvo
 	for i, name := range names { //
 		add := "│  "           // sem isso, ficavam separados. Só ficava └── ou ├──, nao tinha juncao
 		if i == len(names)-1 { //se for o ultimo, n precisa ├──, se n fica errado
-			fmt.Printf(indent + "└──") //printa a posicao, e para isso precisa saber o indent
-			add = "   "                // se for o ultimo, nao vai printar │ , e sim "  "(espaco)
+			text += fmt.Sprintf(indent + "└──") //printa a posicao, e para isso precisa saber o indent
+			add = "   "                         // se for o ultimo, nao vai printar │ , e sim "  "(espaco)
 		} else {
-			fmt.Printf(indent + "├──") //se for um diretorio tem q ter esse formato
+			text += fmt.Sprintf(indent + "├──") //se for um diretorio tem q ter esse formato
 
 		}
 
-		if err := tree(filepath.Join(root, name), indent+add); err != nil { //indent+add para criar os "espacos"
-			return err
+		text2, err := tree(filepath.Join(root, name), indent+add)
+		if err != nil { //indent+add para criar os "espacos"
+			return text, err
 		}
+		text += text2
 	}
 
-	return nil
+	return text, nil
 
 }
 

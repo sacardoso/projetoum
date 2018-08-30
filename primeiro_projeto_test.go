@@ -126,7 +126,7 @@ func TestTreeMaxLevelsZero(t *testing.T) {
 func TestTreeMoreDirs(t *testing.T) {
 	parent := setup()
 	defer teardown(parent)
-	maxLevels = 4
+	maxLevels = 4 // alterei apara o 1 e 2 aparecerem
 
 	result, err := tree(fmt.Sprintf("%s", parent), "")
 	if err != nil {
