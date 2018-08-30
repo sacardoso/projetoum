@@ -100,5 +100,5 @@ func ByteCountSI(b int64) string {
 		div *= unit
 		exp++
 	}
-	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "kMGTPE"[exp]) //dependendo do valor da divisao, pega um valor do slice/array
+	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "kMGTPE"[exp])
 }
